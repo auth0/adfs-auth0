@@ -9,20 +9,23 @@ function AddRelyingParty
 [string]$webAppEndpoint = $(throw "Endpoint where the token will be POSTed is required")
 )
 {
-
-  # check if SP snapin exists in the machine
-  if ( (Get-PSSnapin -Name Microsoft.Adfs.Powershell -Registered -ErrorAction SilentlyContinue) -eq $null )
+  # In ADFS 3.0, management Cmdlets are moved into 'ADFS' module which gets auto-laoded. No more explicit snapin loading required.
+  # [Fix]: Only attempt snapin loading if ADFS commands are not available
+  if ( (Get-Command Set-ADFSRelyingPartyTrust -ErrorAction SilentlyContinue) -eq $null)
   {
-    Write-Error "This PowerShell script requires the Microsoft.Adfs.Powershell Snap-In. Try executing it from an ADFS server"
-    return;
-  }
+    # check if SP snapin exists in the machine
+    if ( (Get-PSSnapin -Name Microsoft.Adfs.Powershell -Registered -ErrorAction SilentlyContinue) -eq $null )
+    {
+        Write-Error "This PowerShell script requires the Microsoft.Adfs.Powershell Snap-In. Try executing it from an ADFS server"
+        return;
+    }
 
-  # check if SP snapin is already loaded, if not load it
-  if ( (Get-PSSnapin -Name Microsoft.Adfs.Powershell -ErrorAction SilentlyContinue) -eq $null )
-  {
-    Write-Verbose "Adding Microsoft.Adfs.Powershell Snapin"
-    Add-PSSnapin Microsoft.Adfs.Powershell
-  }
+    # check if SP snapin is already loaded, if not load it
+    if ( (Get-PSSnapin -Name Microsoft.Adfs.Powershell -ErrorAction SilentlyContinue) -eq $null )
+    {
+        Write-Verbose "Adding Microsoft.Adfs.Powershell Snapin"
+        Add-PSSnapin Microsoft.Adfs.Powershell
+    }
 
   # check if running as Admin
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -31,8 +34,8 @@ function AddRelyingParty
       Write-Error "This PowerShell script requires Administrator privilieges. Try executing by doing right click -> 'Run as Administrator'"
       return;
     }
-
-
+  }
+  
   # remove if exists
   $rp = Get-ADFSRelyingPartyTrust -Name $realm
   if ($rp) 
@@ -68,7 +71,7 @@ function AddRelyingParty
   $rSet = New-ADFSClaimRuleSet –ClaimRule $authRules
   Set-ADFSRelyingPartyTrust –TargetName $realm –IssuanceAuthorizationRules $rSet.ClaimRulesString
 
-  Remove-PSSnapin Microsoft.Adfs.Powershell
+  Remove-PSSnapin Microsoft.Adfs.Powershell -ErrorAction SilentlyContinue
 
   Write-Host "Relying Party Trust '$realm' added succesfully."
 
@@ -81,28 +84,30 @@ function RemoveRelyingParty
 )
 {
 
-  # check if ADFS snapin exists in the machine
-  if ( (Get-PSSnapin -Name Microsoft.Adfs.Powershell -Registered -ErrorAction SilentlyContinue) -eq $null )
+  if ( (Get-Command Set-ADFSRelyingPartyTrust -ErrorAction SilentlyContinue) -eq $null)
   {
-    Write-Error "This PowerShell script requires the Microsoft.Adfs.Powershell Snap-In. Try executing it from an ADFS server"
-    return;
-  }
+    # check if ADFS snapin exists in the machine
+    if ( (Get-PSSnapin -Name Microsoft.Adfs.Powershell -Registered -ErrorAction SilentlyContinue) -eq $null )
+    {
+        Write-Error "This PowerShell script requires the Microsoft.Adfs.Powershell Snap-In. Try executing it from an ADFS server"
+        return;
+    }
 
-  # check if ADFSP snapin is already loaded, if not load it
-  if ( (Get-PSSnapin -Name Microsoft.Adfs.Powershell -ErrorAction SilentlyContinue) -eq $null )
-  {
-    Write-Verbose "Adding Microsoft.Adfs.Powershell Snapin"
-    Add-PSSnapin Microsoft.Adfs.Powershell
-  }
+    # check if ADFSP snapin is already loaded, if not load it
+    if ( (Get-PSSnapin -Name Microsoft.Adfs.Powershell -ErrorAction SilentlyContinue) -eq $null )
+    {
+        Write-Verbose "Adding Microsoft.Adfs.Powershell Snapin"
+        Add-PSSnapin Microsoft.Adfs.Powershell
+    }
 
-  # check if running as Admin
-  $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-  if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -eq $false) 
-  {
-    Write-Error "This PowerShell script requires Administrator privilieges. Try executing by doing right click -> 'Run as Administrator'"
-    return;
+    # check if running as Admin
+    $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -eq $false) 
+    {
+        Write-Error "This PowerShell script requires Administrator privilieges. Try executing by doing right click -> 'Run as Administrator'"
+        return;
+    }
   }
-
 
   # remove if exists
   $rp = Get-ADFSRelyingPartyTrust -Name $realm
@@ -113,7 +118,6 @@ function RemoveRelyingParty
     Write-Host "Relying Party Trust '$realm' removed succesfully."
   }
 
-  Remove-PSSnapin Microsoft.Adfs.Powershell
-
+  Remove-PSSnapin Microsoft.Adfs.Powershell -ErrorAction SilentlyContinue
 
 }
