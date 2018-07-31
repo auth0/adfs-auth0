@@ -9,7 +9,7 @@ function AddRelyingParty
 [string]$webAppEndpoint = $(throw "Endpoint where the token will be POSTed is required")
 )
 {
-  # In ADFS 3.0, management Cmdlets are moved into 'ADFS' module which gets auto-laoded. No more explicit snapin loading required.
+  # In ADFS 3.0, management Cmdlets are moved into 'ADFS' module which gets auto-loaded. No more explicit snapin loading required.
   # [Fix]: Only attempt snapin loading if ADFS commands are not available
   if ( (Get-Command Set-ADFSRelyingPartyTrust -ErrorAction SilentlyContinue) -eq $null)
   {
