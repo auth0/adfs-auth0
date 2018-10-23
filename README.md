@@ -1,7 +1,17 @@
 # Script that configures a Relying Party in ADFS
-==========
 
 ADFS Auth0 script
+
+## Usage
+
+Download the script to a local folder.
+Open PowerShell and navigate to that folder.
+Execute: `.\adfs.ps1` to load the functions.
+
+## Functions
+
+- `Add-RelyingPartner` (legacy alias: `AddRelyingPartner`)
+- `Remove-RelyingPartner` (legacy alias: `RemoveRelyingPartner`)
 
 ## Issue Reporting
 
